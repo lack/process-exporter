@@ -64,10 +64,11 @@ process_names:
   - comm:
     - cat
     name: "{{.StartTime}}"
+  - ppid: 1
 `
 	cfg, err := GetConfig(yml, false)
 	c.Assert(err, IsNil)
-	c.Check(cfg.MatchNamers.matchers, HasLen, 3)
+	c.Check(cfg.MatchNamers.matchers, HasLen, 4)
 
 	postgres := common.ProcAttributes{Name: "postmaster", Cmdline: []string{"/usr/bin/postmaster", "-D", "/data/pg"}}
 	found, name := cfg.MatchNamers.matchers[0].MatchAndName(postgres)
@@ -92,4 +93,21 @@ process_names:
 	found, name = cfg.MatchNamers.matchers[2].MatchAndName(cat)
 	c.Check(found, Equals, true)
 	c.Check(name, Equals, now.String())
+
+	toplevel := common.ProcAttributes{
+		Name:    "toplevel",
+		Cmdline: []string{"/bin/bash"},
+		PPID:    1,
+	}
+	found, name = cfg.MatchNamers.matchers[3].MatchAndName(toplevel)
+	c.Check(found, Equals, true)
+	c.Check(name, Equals, "bash")
+
+	subprocess := common.ProcAttributes{
+		Name:    "subprocess",
+		Cmdline: []string{"/bin/bash"},
+		PPID:    5366,
+	}
+	found, name = cfg.MatchNamers.matchers[3].MatchAndName(subprocess)
+	c.Check(found, Equals, false)
 }

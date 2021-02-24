@@ -42,6 +42,10 @@ type (
 		captures map[string]string
 	}
 
+	ppidMatcher struct {
+		ppid int
+	}
+
 	andMatcher []Matcher
 
 	templateNamer struct {
@@ -67,6 +71,10 @@ type (
 func (c *cmdlineMatcher) String() string {
 	return fmt.Sprintf("cmdlines: %+v", c.regexes)
 
+}
+
+func (p *ppidMatcher) String() string {
+	return fmt.Sprintf("PPID: %+v", p.ppid)
 }
 
 func (e *exeMatcher) String() string {
@@ -170,6 +178,10 @@ func (m *cmdlineMatcher) Match(nacl common.ProcAttributes) bool {
 	return true
 }
 
+func (m *ppidMatcher) Match(nacl common.ProcAttributes) bool {
+	return m.ppid == nacl.PPID
+}
+
 func (m andMatcher) Match(nacl common.ProcAttributes) bool {
 	for _, matcher := range m {
 		if !matcher.Match(nacl) {
@@ -228,6 +240,7 @@ func getMatchNamer(yamlmn interface{}) (common.MatchNamer, error) {
 
 	var smap = make(map[string][]string)
 	var nametmpl string
+	ppid := -1
 	for k, v := range nm {
 		key, ok := k.(string)
 		if !ok {
@@ -240,6 +253,15 @@ func getMatchNamer(yamlmn interface{}) (common.MatchNamer, error) {
 				return nil, fmt.Errorf("non-string value %v for key %q", v, key)
 			}
 			nametmpl = value
+		} else if key == "ppid" {
+			value, ok := v.(int)
+			if !ok {
+				return nil, fmt.Errorf("Non-integer value %v for key %q", v, key)
+			}
+			if value < 0 {
+				return nil, fmt.Errorf("Key %q must have a value >= 0", key)
+			}
+			ppid = value
 		} else {
 			vals, ok := v.([]interface{})
 			if !ok {
@@ -289,6 +311,9 @@ func getMatchNamer(yamlmn interface{}) (common.MatchNamer, error) {
 			regexes:  rs,
 			captures: make(map[string]string),
 		})
+	}
+	if ppid >= 0 {
+		matchers = append(matchers, &ppidMatcher{ppid: ppid})
 	}
 	if len(matchers) == 0 {
 		return nil, fmt.Errorf("no matchers provided")

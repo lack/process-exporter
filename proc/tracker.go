@@ -424,6 +424,7 @@ func (t *Tracker) Update(iter Iter) (CollectErrors, []Update, error) {
 			Cmdline:   idinfo.Cmdline,
 			Username:  t.lookupUid(idinfo.EffectiveUID),
 			PID:       idinfo.Pid,
+			PPID:      idinfo.ParentPid,
 			StartTime: idinfo.StartTime,
 		}
 		wanted, gname := t.namer.MatchAndName(nacl)

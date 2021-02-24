@@ -113,8 +113,8 @@ trouble with.
 
 #### Using a config file: process selectors
 
-Each item in `process_names` must contain one or more selectors (`comm`, `exe`
-or `cmdline`); if more than one selector is present, they must all match.  Each
+Each item in `process_names` must contain one or more selectors (`comm`, `exe`,
+`cmdline`, or `ppid`); if more than one selector is present, they must all match.  Each
 selector is a list of strings to match against a process's `comm`, `argv[0]`,
 or in the case of `cmdline`, a regexp to apply to the command line.  The cmdline
 regexp uses the [Go syntax](https://golang.org/pkg/regexp).
@@ -125,6 +125,9 @@ matching any of the strings will be added to the item's group.
 For `cmdline`, the list of regexes is an AND, meaning they all must match.  Any
 capturing groups in a regexp must use the `?P<name>` option to assign a name to
 the capture, which is used to populate `.Matches`.
+
+For `ppid`, the value must be an integer, and only processes with a parent PID
+equal to this value will match.
 
 Performance tip: give an exe or comm clause in addition to any cmdline
 clause, so you avoid executing the regexp when the executable name doesn't
@@ -153,6 +156,8 @@ process_names:
     cmdline:
     - -config.path\s+(?P<Cfgfile>\S+)
 
+  # ppid == 1 means this is a top-level process
+  - ppid: 1
 ```
 
 Here's the config I use on my home machine:
@@ -171,6 +176,13 @@ process_names:
     - --user
     name: upstart:-user
 
+```
+
+This config is nice for only addressing the main top-level processes on servers:
+
+```
+process_names:
+  - ppid: 1
 ```
 
 ### Using -procnames/-namemapping instead of config.path
