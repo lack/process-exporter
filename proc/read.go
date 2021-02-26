@@ -548,9 +548,6 @@ func (p proc) GetThreads() ([]Thread, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(threads) < 2 {
-		return nil, nil
-	}
 
 	return threads, nil
 }

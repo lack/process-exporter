@@ -129,7 +129,8 @@ func (tp *trackedProc) getUpdate() Update {
 	if tp.metrics.Wchan != "" {
 		u.Wchans[tp.metrics.Wchan] = 1
 	}
-	if len(tp.threads) > 1 {
+
+	if len(tp.threads) > 0 {
 		for _, tt := range tp.threads {
 			u.Threads = append(u.Threads, ThreadUpdate{tt.name, tt.latest})
 			if tt.wchan != "" {
@@ -190,7 +191,7 @@ func (tp *trackedProc) update(metrics Metrics, now time.Time, cerrs *CollectErro
 	tp.lastaccum = newcounts.Sub(tp.metrics.Counts)
 	tp.metrics = metrics
 	tp.lastUpdate = now
-	if len(threads) > 1 {
+	if len(threads) > 0 {
 		if tp.threads == nil {
 			tp.threads = make(map[ThreadID]trackedThread)
 		}
